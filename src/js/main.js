@@ -1,4 +1,6 @@
-//'use strict';
+'use strict';
+
+const { create } = require("browser-sync");
 
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -98,16 +100,99 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Modal____________________________________________________________________________________
     
-    const modalBtn = document.querySelector('[data-modal]'),
+    const modalBtn = document.querySelectorAll('[data-modal]'),
           modalCloseBtn = document.querySelector('[data-close]'),
           modalWindow = document.querySelector('.modal');
 
-    modalBtn.addEventListener('click', () => {
+    
+    function openModal() {
         modalWindow.classList.add('show');
         modalWindow.classList.remove('hide');
+        document.body.style.overflow = 'hidden';
+        clearInterval(modalTimerId); //закрываем модальное окно 
+    }
+    modalBtn.forEach(btn => {
+        btn.addEventListener('click', openModal);
     });
-    modalCloseBtn.addEventListener('click', () => {
+
+    function closeModal() {
         modalWindow.classList.add('hide');
         modalWindow.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    modalCloseBtn.addEventListener('click', closeModal);
+
+    modalWindow.addEventListener('click', (e) => {
+        if(e.target === modalWindow) {
+            closeModal();
+        }
     });
+
+    document.addEventListener('keydown', (e) => { // закрываем модальное окно кнопкой esc
+        if(e.code === 'Escape' && modalWindow.classList.contains('show')) { //если нажата кнопка esc и класс шоу
+            closeModal();// то закрыть окно при нажатии кнопки esc
+        }
+    });
+
+    const modalTimerId = setTimeout(openModal, 10000);// выскакивающее модальное окно через 10сек
+
+    function showModalByScroll() {
+        if(window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+            openModal();
+            window.removeEventListener('scroll', showModalByScroll);
+        }
+    }
+
+    window.addEventListener('scroll', showModalByScroll);
+
+
+    // Make cards through classes________________________________________________________________
+
+    class MenuCard {
+        constructor(src, alt, title, descr, price, parentSelector) {
+            this.src = src;
+            this.alt = alt;
+            this.title = title;
+            this.descr = descr;
+            this.price = price;
+            this.parent = document.querySelector(parentSelector);
+            this.transfer = 27;
+            this.changeToUAH();
+        }
+
+        changeToUAH() {
+            this.price = this.price * this.transfer;
+        }
+        
+        createMenuItem() {
+            const element = document.createElement('div');
+            element.innerHTML = `
+                <div class="menu__item">
+                    <img src=${this.src} alt=${this.alt}>
+                    <h3 class="menu__item-subtitle">${this.title}</h3>
+                    <div class="menu__item-descr">${this.descr}</div>
+                    <div class="menu__item-divider"></div>
+                    <div class="menu__item-price">
+                        <div class="menu__item-cost">Цена:</div>
+                        <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+                    </div>
+                </div>
+            `;
+            this.parent.append(element);
+        }
+
+    }
+
+    const menuItem = new MenuCard(
+        "img/tabs/vegy.jpg",
+        "vegy",
+        'Меню "Фитнес"',
+        'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 
+        9,
+        '.menu .container'
+    );
+
+    menuItem.createMenuItem();
+
+
 });
