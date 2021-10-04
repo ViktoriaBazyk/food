@@ -86,17 +86,6 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "./node_modules/browser-sync/dist/index.js":
-/*!*************************************************!*\
-  !*** ./node_modules/browser-sync/dist/index.js ***!
-  \*************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-throw new Error("Module parse failed: Unexpected character '#' (1:0)\nYou may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders\n> #! /usr/bin/env node\n| \"use strict\";\n| /**");
-
-/***/ }),
-
 /***/ "./src/js/main.js":
 /*!************************!*\
   !*** ./src/js/main.js ***!
@@ -106,10 +95,6 @@ throw new Error("Module parse failed: Unexpected character '#' (1:0)\nYou may ne
 
 "use strict";
 
-
-const {
-  create
-} = __webpack_require__(/*! browser-sync */ "./node_modules/browser-sync/dist/index.js");
 
 window.addEventListener('DOMContentLoaded', () => {
   //Tabs
@@ -247,47 +232,109 @@ window.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('scroll', showModalByScroll); // Make cards through classes________________________________________________________________
 
-  /*  class MenuCard {
-       constructor(src, alt, title, descr, price, parentSelector) {
-           this.src = src;
-           this.alt = alt;
-           this.title = title;
-           this.descr = descr;
-           this.price = price;
-           this.parent = document.querySelector(parentSelector);
-           this.transfer = 27;
-           this.changeToUAH();
-       }
-        changeToUAH() {
-           this.price = this.price * this.transfer;
-       }
-       
-       createMenuItem() {
-           const element = document.createElement('div');
-           element.innerHTML = `
-               <div class="menu__item">
-                   <img src=${this.src} alt=${this.alt}>
-                   <h3 class="menu__item-subtitle">${this.title}</h3>
-                   <div class="menu__item-descr">${this.descr}</div>
-                   <div class="menu__item-divider"></div>
-                   <div class="menu__item-price">
-                       <div class="menu__item-cost">Цена:</div>
-                       <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
-                   </div>
-               </div>
-           `;
-           this.parent.append(element);
-       }
+  class MenuCard {
+    constructor(src, alt, title, descr, price, parentSelector, ...classes) {
+      this.src = src;
+      this.alt = alt;
+      this.title = title;
+      this.descr = descr;
+      this.price = price;
+      this.classes = classes;
+      this.parent = document.querySelector(parentSelector);
+      this.transfer = 27; // курс доллара 
+
+      this.changeToUAH();
     }
-    const menuItem = new MenuCard(
-       "img/tabs/vegy.jpg",
-       "vegy",
-       'Меню "Фитнес"',
-       'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 
-       9,
-       '.menu .container'
-   );
-    menuItem.createMenuItem(); */
+
+    changeToUAH() {
+      // метод класса (конвертор в гривну)
+      this.price = this.price * this.transfer;
+    }
+
+    createMenuItem() {
+      // метод класса
+      const element = document.createElement('div');
+
+      if (this.classes.length === 0) {
+        // проверка есть ли у элемента главный класс
+        this.element = 'menu__item';
+        element.classList.add(this.element);
+      } else {
+        this.classes.forEach(className => element.classList.add(className));
+      }
+
+      element.innerHTML = `
+                <img src=${this.src} alt=${this.alt}>
+                <h3 class="menu__item-subtitle">${this.title}</h3>
+                <div class="menu__item-descr">${this.descr}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+                </div>
+
+            `;
+      this.parent.append(element);
+    }
+
+  }
+  /* const menuItem = new MenuCard( // создаем новый объект 
+      "img/tabs/vegy.jpg",
+      "vegy",
+      'Меню "Фитнес"',
+      'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 
+      9,
+      '.menu .container'
+  );
+   menuItem.createMenuItem(); // вызываем метод */
+  // тоже самое что сверху 
+
+
+  new MenuCard( // создаем новый объект 
+  "img/tabs/vegy.jpg", "vegy", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 9, '.menu .container').createMenuItem(); // вызываем метод 
+
+  new MenuCard( // создаем новый объект 
+  "img/tabs/elite.jpg", "elite", 'Меню “Премиум”', 'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', 14, '.menu .container', 'menu__item').createMenuItem();
+  new MenuCard( // создаем новый объект 
+  "img/tabs/post.jpg", "post", 'Меню "Постное"', 'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', 21, '.menu .container', 'menu__item').createMenuItem(); // Forms_____________________________________________________
+
+  const forms = document.querySelectorAll('form');
+  const message = {
+    loading: 'Загрузка',
+    success: 'Регистрация прошла успешно!',
+    failure: 'Что-то пошло не так...'
+  };
+  forms.forEach(item => {
+    // под каждую форму подвязываем функцию postData, перебираем псевдомассив 
+    postData(item);
+  });
+
+  function postData(form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const statusMessage = document.createElement('div'); // добавляем div для оповещения после регистрации
+
+      statusMessage.classList.add('status'); // добавляем класс к div'у
+
+      statusMessage.textContent = message.loading; // добавляем текст на страницу
+
+      form.append(statusMessage); // добавляем сообщение к форме
+
+      const request = new XMLHttpRequest();
+      request.open('POST', 'server.php');
+      request.setRequestHeader('Content-type', 'multipart/form-data');
+      const formData = new FormData(form);
+      request.send(formData);
+      request.addEventListener('load', () => {
+        if (request.status === 200) {
+          console.log(request.response);
+          statusMessage.textContent = message.success;
+        } else {
+          statusMessage.textContent = message.failure;
+        }
+      });
+    });
+  }
 });
 
 /***/ })
