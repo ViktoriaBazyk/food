@@ -99,43 +99,41 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Modal____________________________________________________________________________________
     
-    const modalBtn = document.querySelectorAll('[data-modal]'),
-          modalCloseBtn = document.querySelector('[data-close]'),
+    const modalBtn = document.querySelectorAll('[data-modal]'), // data-modal кастомный атрибут
           modalWindow = document.querySelector('.modal');
 
     
     function openModal() {
         modalWindow.classList.add('show');
         modalWindow.classList.remove('hide');
-        document.body.style.overflow = 'hidden';
-        clearInterval(modalTimerId); //закрываем модальное окно 
+        document.body.style.overflow = 'hidden'; // убираем скрол страницы при открытом модальном окне
+        clearInterval(modalTimerId); //удаляем выскакивающее мод окно, если юзер сам открыл модалку
     }
-    modalBtn.forEach(btn => {
-        btn.addEventListener('click', openModal);
+    modalBtn.forEach(btn => { // перебираем кнопки в псевдомассиве
+        btn.addEventListener('click', openModal);// навешиваем обработчик события клик и передаем функцию
     });
 
     function closeModal() {
         modalWindow.classList.add('hide');
         modalWindow.classList.remove('show');
-        document.body.style.overflow = '';
+        document.body.style.overflow = ''; // востанавливаем скрол на странице
     }
-    modalCloseBtn.addEventListener('click', closeModal);
 
-    modalWindow.addEventListener('click', (e) => {
-        if(e.target === modalWindow) {
-            closeModal();
+    modalWindow.addEventListener('click', (e) => { // закрытие модального окна кликом на подложку, любое пространство вне модального окна
+        if(e.target === modalWindow || e.target.getAttribute('data-close') == '') { //если клик произведен на подложку или крестик
+            closeModal(); // закрыть модальное окно
         }
     });
 
     document.addEventListener('keydown', (e) => { // закрываем модальное окно кнопкой esc
-        if(e.code === 'Escape' && modalWindow.classList.contains('show')) { //если нажата кнопка esc и класс шоу
+        if(e.code === 'Escape' && modalWindow.classList.contains('show')) { //если нажата кнопка esc и проверка что у модального окна есть класс show, то есть оно открыто
             closeModal();// то закрыть окно при нажатии кнопки esc
         }
     });
 
-    const modalTimerId = setTimeout(openModal, 10000);// выскакивающее модальное окно через 10сек
+    const modalTimerId = setTimeout(openModal, 50000);// выскакивающее модальное окно через 50сек
 
-    function showModalByScroll() {
+    function showModalByScroll() { // выпрыгивающее мод окно если пользователь долистал до конца страницы
         if(window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
             openModal();
             window.removeEventListener('scroll', showModalByScroll);
@@ -238,8 +236,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
 
     const message = {
-        loading: 'Загрузка',
-        success: 'Регистрация прошла успешно!',
+        loading: 'img/form/spinner.svg',
+        success: 'Спасибо! Мы с вами свяжемся',
         failure: 'Что-то пошло не так...'
     };
 
@@ -251,28 +249,80 @@ window.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const statusMessage = document.createElement('div');// добавляем div для оповещения после регистрации
-            statusMessage.classList.add('status');// добавляем класс к div'у
-            statusMessage.textContent = message.loading;// добавляем текст на страницу
-            form.append(statusMessage);// добавляем сообщение к форме
+            let statusMessage = document.createElement('img');// здесь создали изображение 
+            statusMessage.src = message.loading; // здесь подставили атрибут src, а путь взяли выше с объекта message
+            statusMessage.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
+            form.insertAdjacentElement('afterend', statusMessage);// добавляем спинер за приделы flex контейнера во второй форме
 
 
-            const request = new XMLHttpRequest();
-            request.open('POST', 'server.php');
+            const formData = new FormData(form);// делает так, чтобы все данные которые заполнил пользователь мы получили в js и могли отправить на сервер
 
+            const object = {};// перебираем данные из объекта formData и кладем в рустой объект
+            formData.forEach(function(value, key) {
+                object[key] = value;
+            });
             
-            const formData = new FormData(form);
+            fetch('server.php', {
+                method: "POST",
+                headers: {
+                    'Content-type': 'application/json'// отправляем данные в формате json
+                },
+                body: JSON.stringify(object)
+            })
+            .then(data => data.text())
+            .then(data => {
+                console.log(data);
+                showThanksModal(message.success);// вызываем функцию с модальным окном благодарностей, где в аргумент передаем сообщение с объекта message
+                statusMessage.remove();
+            }).catch(() => {
+                showThanksModal(message.failure);
+            }).finally(() => {
+                form.reset();// очищаем форму инпуты
+            });
+            
 
-            request.send(formData);
+            // Код который использовался для XMLHttpRequest, выше современный метод отправки данных на сервер
 
-            request.addEventListener('load', () => {
+            /* request.addEventListener('load', () => {
                 if(request.status === 200) {
                     console.log(request.response);
-                    statusMessage.textContent = message.success;
+                    showThanksModal(message.success);// вызываем функцию с модальным окном благодарностей, где в аргумент передаем сообщение с объекта message
+                    form.reset(); // очищаем форму инпуты
+                    statusMessage.remove();
                 } else {
-                    statusMessage.textContent = message.failure;
+                    showThanksModal(message.failure);
                 }
-            });
+            }); */
         });
     }
+
+    function showThanksModal(message) {
+        const firstModalDialog = document.querySelector('.modal__dialog');// у этого класса уже есть определенные стили, которые подойдут нам для нового модального окна
+
+        firstModalDialog.classList.add('hide');
+        openModal();
+
+        const thanksModalWrapper = document.createElement('div');
+        thanksModalWrapper.classList.add('modal__dialog');
+        thanksModalWrapper.innerHTML =`
+            <div class="modal__content">
+                <div class="modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModalWrapper);
+
+        setTimeout(() => { // удаление блока thanksModalWrapper чтобы клиент снова мог отправить заявку
+            thanksModalWrapper.remove();
+            firstModalDialog.classList.add('show');
+            firstModalDialog.classList.remove('hide');
+            closeModal();
+        }, 4000);
+    }
+
+    
 });
